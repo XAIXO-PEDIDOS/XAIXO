@@ -75,7 +75,7 @@ export default function BotonEliminar({ pedidoId, onSuccess, variant = "card" }:
           <p className="mb-1 text-sm font-semibold text-red-800">
             ¿Seguro que quieres eliminar este pedido?
           </p>
-          <p className="mb-3 text-xs text-red-600">Esta acción no se puede deshacer.</p>
+          <p className="mb-3 text-xs text-red-600">Se moverá a la papelera y podrás restaurarlo más adelante.</p>
           <div className="flex gap-2">
             <button
               onClick={confirmar}

@@ -14,11 +14,17 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
-  const [{ data: pedidos }, { data: camiones }] = await Promise.all([
+  const [{ data: pedidos }, { data: pedidosEliminados }, { data: camiones }] = await Promise.all([
     supabase
       .from("pedidos")
       .select("*, camiones(*)")
+      .is("deleted_at", null)
       .order("fecha_entrega", { ascending: true }),
+    supabase
+      .from("pedidos")
+      .select("*, camiones(*)")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false }),
     supabase
       .from("camiones")
       .select("*")
@@ -53,6 +59,7 @@ export default async function DashboardPage() {
       <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
         <PedidosView
           pedidos={(pedidos ?? []) as Pedido[]}
+          pedidosEliminados={(pedidosEliminados ?? []) as Pedido[]}
           camiones={(camiones ?? []) as Camion[]}
           clientesSugeridos={clientesSugeridos}
         />

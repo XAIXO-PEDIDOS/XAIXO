@@ -31,5 +31,6 @@ export interface Pedido {
   creado_por: string | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
   camiones?: Camion | null;
 }

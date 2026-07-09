@@ -188,14 +188,36 @@ export async function deletePedido(id: string): Promise<ActionState> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado" };
 
+  // Borrado suave: se marca deleted_at en vez de eliminar la fila.
+  // El pedido pasa a la papelera y puede restaurarse.
   const { error } = await supabase
     .from("pedidos")
-    .delete()
+    .update({ deleted_at: new Date().toISOString() })
     .eq("id", id)
-    .in("estado", ["pendiente", "confirmado"]);
+    .in("estado", ["pendiente", "confirmado"])
+    .is("deleted_at", null);
 
   if (error) {
     console.error("[deletePedido]", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/dashboard");
+  return { error: null };
+}
+
+export async function restaurarPedido(id: string): Promise<ActionState> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado" };
+
+  const { error } = await supabase
+    .from("pedidos")
+    .update({ deleted_at: null })
+    .eq("id", id);
+
+  if (error) {
+    console.error("[restaurarPedido]", error);
     return { error: error.message };
   }
 

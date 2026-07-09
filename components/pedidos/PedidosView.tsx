@@ -6,16 +6,18 @@ import PedidoCard from "./PedidoCard";
 import PedidoForm from "./PedidoForm";
 import CalendarioSemanal from "@/components/calendario/CalendarioSemanal";
 import TableroCamiones from "@/components/tablero/TableroCamiones";
+import Papelera from "./Papelera";
 
-type Vista = "lista" | "calendario" | "tablero";
+type Vista = "lista" | "calendario" | "tablero" | "papelera";
 
 interface Props {
   pedidos: Pedido[];
+  pedidosEliminados: Pedido[];
   camiones: Camion[];
   clientesSugeridos: string[];
 }
 
-export default function PedidosView({ pedidos, camiones, clientesSugeridos }: Props) {
+export default function PedidosView({ pedidos, pedidosEliminados, camiones, clientesSugeridos }: Props) {
   const [vista, setVista] = useState<Vista>("calendario");
   const [modalOpen, setModalOpen] = useState(false);
   const [pedidoEditar, setPedidoEditar] = useState<Pedido | undefined>();
@@ -66,6 +68,7 @@ export default function PedidosView({ pedidos, camiones, clientesSugeridos }: Pr
                 { key: "calendario", label: "Calendario" },
                 { key: "tablero",    label: "Camiones" },
                 { key: "lista",      label: "Lista" },
+                { key: "papelera",   label: `Papelera${pedidosEliminados.length > 0 ? ` (${pedidosEliminados.length})` : ""}` },
               ] as { key: Vista; label: string }[]
             ).map(({ key, label }) => (
               <button
@@ -96,6 +99,8 @@ export default function PedidosView({ pedidos, camiones, clientesSugeridos }: Pr
         <CalendarioSemanal pedidos={pedidos} onEdit={openEdit} />
       ) : vista === "tablero" ? (
         <TableroCamiones pedidos={pedidos} camiones={camiones} onEdit={openEdit} />
+      ) : vista === "papelera" ? (
+        <Papelera pedidos={pedidosEliminados} />
       ) : (
         /* Vista lista */
         pedidos.length === 0 ? (
