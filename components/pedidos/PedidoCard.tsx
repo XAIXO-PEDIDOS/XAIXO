@@ -114,19 +114,19 @@ export default function PedidoCard({ pedido, onEdit }: Props) {
           </div>
         </div>
 
-        <div className="shrink-0 flex items-center gap-1">
+        <div className="shrink-0 flex items-center gap-2 md:gap-1">
           <a
             href={`/imprimir/${pedido.id}`}
             target="_blank"
             rel="noopener noreferrer"
             title="Imprimir hoja de verificación de carga"
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-white hover:text-gray-600 transition-colors border border-transparent hover:border-gray-200"
+            className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg p-1.5 text-gray-400 hover:bg-white hover:text-gray-600 transition-colors border border-transparent hover:border-gray-200 md:min-h-0 md:min-w-0"
           >
             🖨
           </a>
           <button
             onClick={() => onEdit(pedido)}
-            className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:bg-white hover:text-gray-900 transition-colors border border-transparent hover:border-gray-200"
+            className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:bg-white hover:text-gray-900 transition-colors border border-transparent hover:border-gray-200 md:min-h-0 md:min-w-0"
           >
             {bloqueado ? "Ver" : "Editar"}
           </button>

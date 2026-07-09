@@ -207,7 +207,7 @@ function ColumnaDroppable({
   const [diaSemana, diaMes] = labelDia.split(" ");
 
   return (
-    <div className="flex flex-col min-w-0">
+    <div className="flex flex-col w-[150px] shrink-0 md:w-auto md:min-w-0">
       {/* Cabecera del día */}
       <div
         className={`mb-2 flex flex-col items-center rounded-xl py-2 text-center text-xs font-semibold transition-colors ${
@@ -376,7 +376,7 @@ export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit }: P
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-5 gap-3">
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 md:grid md:grid-cols-5 md:overflow-visible md:mx-0 md:px-0 md:pb-0">
           {dias.map((dia) => (
             <ColumnaDroppable
               key={toDateStr(dia)}

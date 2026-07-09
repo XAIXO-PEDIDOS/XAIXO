@@ -79,13 +79,13 @@ export default function BotonEliminar({ pedidoId, onSuccess, variant = "card" }:
           <div className="flex gap-2">
             <button
               onClick={confirmar}
-              className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+              className="flex-1 inline-flex items-center justify-center min-h-11 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors md:min-h-0"
             >
               Sí, eliminar
             </button>
             <button
               onClick={cancelar}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center justify-center min-h-11 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors md:min-h-0"
             >
               Cancelar
             </button>
@@ -97,7 +97,7 @@ export default function BotonEliminar({ pedidoId, onSuccess, variant = "card" }:
       <button
         onClick={pedir}
         disabled={fase === "cargando"}
-        className="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-100 transition-colors disabled:opacity-50"
+        className="w-full inline-flex items-center justify-center min-h-11 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-100 transition-colors disabled:opacity-50 md:min-h-0"
       >
         {fase === "cargando" ? "Eliminando…" : "🗑 Eliminar pedido"}
       </button>
@@ -110,13 +110,13 @@ export default function BotonEliminar({ pedidoId, onSuccess, variant = "card" }:
       <div className="mt-2 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={confirmar}
-          className="flex-1 rounded-lg bg-red-600 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors"
+          className="flex-1 inline-flex items-center justify-center min-h-11 rounded-lg bg-red-600 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors md:min-h-0"
         >
           ¿Seguro? Eliminar
         </button>
         <button
           onClick={cancelar}
-          className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
+          className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors md:min-h-0 md:min-w-0"
         >
           ✕
         </button>
@@ -127,7 +127,7 @@ export default function BotonEliminar({ pedidoId, onSuccess, variant = "card" }:
     <button
       onClick={pedir}
       disabled={fase === "cargando"}
-      className="mt-2 w-full rounded-lg border border-red-100 bg-red-50 py-1.5 text-xs font-medium text-red-500 hover:bg-red-100 transition-colors disabled:opacity-50"
+      className="mt-2 w-full inline-flex items-center justify-center min-h-11 rounded-lg border border-red-100 bg-red-50 py-1.5 text-xs font-medium text-red-500 hover:bg-red-100 transition-colors disabled:opacity-50 md:min-h-0"
     >
       {fase === "cargando" ? "Eliminando…" : "🗑 Eliminar"}
     </button>

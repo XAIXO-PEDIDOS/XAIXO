@@ -50,7 +50,7 @@ export default function PedidosView({ pedidos, camiones, clientesSugeridos }: Pr
   return (
     <>
       {/* ── Barra superior ── */}
-      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+      <div className="flex flex-col gap-3 mb-6 md:flex-row md:items-center md:justify-between md:gap-4">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Pedidos</h2>
           <p className="text-sm text-gray-500">
@@ -58,7 +58,7 @@ export default function PedidosView({ pedidos, camiones, clientesSugeridos }: Pr
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
           {/* Toggle de vista — píldora estilo segmented control */}
           <div className="flex items-center gap-0.5 rounded-xl bg-gray-100 p-1">
             {(
@@ -71,7 +71,7 @@ export default function PedidosView({ pedidos, camiones, clientesSugeridos }: Pr
               <button
                 key={key}
                 onClick={() => setVista(key)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                className={`min-h-11 md:min-h-0 inline-flex items-center justify-center px-2.5 py-1.5 rounded-lg text-xs md:px-3 md:text-sm font-medium transition-all ${
                   vista === key
                     ? "bg-white shadow-sm text-marca font-semibold"
                     : "text-gray-500 hover:text-gray-700"
@@ -84,7 +84,7 @@ export default function PedidosView({ pedidos, camiones, clientesSugeridos }: Pr
 
           <button
             onClick={openCreate}
-            className="rounded-lg bg-marca px-4 py-2 text-sm font-semibold text-white hover:bg-marca-hover transition-colors"
+            className="min-h-11 md:min-h-0 inline-flex items-center justify-center rounded-lg bg-marca px-3 py-2 text-xs md:px-4 md:text-sm font-semibold text-white hover:bg-marca-hover transition-colors"
           >
             + Nuevo pedido
           </button>
@@ -143,16 +143,16 @@ export default function PedidosView({ pedidos, camiones, clientesSugeridos }: Pr
 
       {/* ── Modal edición/creación ── */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4">
           <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
-          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-xl">
+          <div className="relative w-full max-w-lg max-h-full md:max-h-[90vh] overflow-y-auto rounded-none md:rounded-2xl bg-white shadow-xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
               <h2 className="text-base font-semibold text-gray-900">
                 {pedidoEditar ? "Editar pedido" : "Nuevo pedido"}
               </h2>
               <button
                 onClick={closeModal}
-                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors md:min-h-0 md:min-w-0"
               >
                 ✕
               </button>

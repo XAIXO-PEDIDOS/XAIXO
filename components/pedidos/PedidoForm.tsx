@@ -14,7 +14,7 @@ function SubmitButton({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-marca px-4 py-3 text-sm font-semibold text-white hover:bg-marca-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="w-full min-h-11 md:min-h-0 inline-flex items-center justify-center rounded-lg bg-marca px-4 py-3 text-sm font-semibold text-white hover:bg-marca-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {pending ? "Guardando…" : label}
     </button>
@@ -84,14 +84,14 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
         <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
           Tipo de pedido
         </label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           {(["porte_propio", "trailer_fabrica"] as TipoPedido[]).map((t) => (
             <button
               key={t}
               type="button"
               disabled={bloqueado}
               onClick={() => setTipo(t)}
-              className={`rounded-lg border-2 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
+              className={`min-h-11 md:min-h-0 rounded-lg border-2 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
                 tipo === t
                   ? t === "porte_propio"
                     ? "border-blue-500 bg-blue-50 text-blue-700"
@@ -122,7 +122,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
           onBlur={() => setTimeout(() => setShowSugerencias(false), 150)}
           onFocus={() => setShowSugerencias(true)}
           autoComplete="off"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+          className="w-full min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
           placeholder="Nombre del cliente"
         />
         {showSugerencias && sugerenciasFiltradas.length > 0 && (
@@ -153,7 +153,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
           type="text"
           disabled={bloqueado}
           defaultValue={pedido?.direccion ?? ""}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+          className="w-full min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
           placeholder="Dirección completa"
         />
       </div>
@@ -165,7 +165,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
         </label>
         <div className="space-y-2">
           {materiales.map((m, i) => (
-            <div key={i} className="flex gap-2 items-center">
+            <div key={i} className="flex flex-col gap-2 md:flex-row md:items-center">
               {/* Nombre */}
               <input
                 type="text"
@@ -173,42 +173,45 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
                 disabled={bloqueado}
                 onChange={(e) => updateMaterial(i, "material", e.target.value)}
                 placeholder="Material"
-                className="flex-1 min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                className="w-full min-h-11 md:min-h-0 md:flex-1 md:min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
               />
-              {/* Cantidad */}
-              <input
-                type="number"
-                value={m.cantidad ?? ""}
-                disabled={bloqueado}
-                onChange={(e) =>
-                  updateMaterial(i, "cantidad", e.target.value ? Number(e.target.value) : null)
-                }
-                placeholder="Cant."
-                min="0"
-                step="0.5"
-                className="w-20 shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
-              />
-              {/* Unidad libre */}
-              <input
-                type="text"
-                value={m.unidad}
-                disabled={bloqueado}
-                onChange={(e) => updateMaterial(i, "unidad", e.target.value)}
-                placeholder="ud / t / m²…"
-                className="w-24 shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
-              />
-              {/* Quitar fila */}
-              {!bloqueado && (
-                <button
-                  type="button"
-                  onClick={() => removeMaterial(i)}
-                  disabled={materiales.length === 1}
-                  className="shrink-0 rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-30 transition-colors"
-                  title="Quitar línea"
-                >
-                  ✕
-                </button>
-              )}
+              {/* Cantidad + unidad + quitar: fila propia en móvil, se integran en la fila principal en escritorio */}
+              <div className="flex gap-2 items-center md:contents">
+                {/* Cantidad */}
+                <input
+                  type="number"
+                  value={m.cantidad ?? ""}
+                  disabled={bloqueado}
+                  onChange={(e) =>
+                    updateMaterial(i, "cantidad", e.target.value ? Number(e.target.value) : null)
+                  }
+                  placeholder="Cant."
+                  min="0"
+                  step="0.5"
+                  className="w-20 shrink-0 min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                />
+                {/* Unidad libre */}
+                <input
+                  type="text"
+                  value={m.unidad}
+                  disabled={bloqueado}
+                  onChange={(e) => updateMaterial(i, "unidad", e.target.value)}
+                  placeholder="ud / t / m²…"
+                  className="w-24 shrink-0 min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                />
+                {/* Quitar fila */}
+                {!bloqueado && (
+                  <button
+                    type="button"
+                    onClick={() => removeMaterial(i)}
+                    disabled={materiales.length === 1}
+                    className="shrink-0 min-h-11 min-w-11 md:min-h-0 md:min-w-0 inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-30 transition-colors"
+                    title="Quitar línea"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -224,7 +227,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
       </div>
 
       {/* ── Fecha + Franja ── */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         <div>
           <label htmlFor="fecha_entrega" className="block text-sm font-medium text-gray-700 mb-1">
             Fecha de entrega <span className="text-red-500">*</span>
@@ -236,7 +239,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
             required
             disabled={bloqueado}
             defaultValue={pedido?.fecha_entrega ?? ""}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
           />
         </div>
         <div>
@@ -248,7 +251,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
             name="franja_horaria"
             disabled={bloqueado}
             defaultValue={pedido?.franja_horaria ?? ""}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
           >
             <option value="">Sin especificar</option>
             <option value="mañana">Mañana</option>
@@ -270,7 +273,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
             disabled={bloqueado}
             value={camionId}
             onChange={(e) => setCamionId(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
           >
             <option value="">Sin asignar</option>
             {camiones.map((c) => (
@@ -299,7 +302,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
             type="text"
             disabled={bloqueado}
             defaultValue={pedido?.fabrica_origen ?? ""}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
             placeholder="ej. Cementos Portland Tudela"
           />
         </div>
@@ -316,7 +319,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
             name="estado"
             disabled={bloqueado}
             defaultValue={pedido.estado}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+            className="w-full min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
           >
             {ESTADOS.map((e) => (
               <option key={e.value} value={e.value}>{e.label}</option>
@@ -364,7 +367,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex-1 min-h-11 md:min-h-0 inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
@@ -394,7 +397,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
           href={`/imprimir/${pedido.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+          className="mt-2 flex min-h-11 md:min-h-0 items-center justify-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
         >
           🖨 Imprimir hoja de verificación de carga
         </a>

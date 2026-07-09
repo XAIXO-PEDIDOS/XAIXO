@@ -242,7 +242,7 @@ function ColumnaDroppable({
   const bgDefault = !isOver ? "border-gray-200 bg-white/60" : "";
 
   return (
-    <div className="flex flex-col min-w-0">
+    <div className="flex flex-col w-[150px] shrink-0 md:w-auto md:min-w-0">
       {/* Cabecera */}
       <div className={`mb-2 rounded-lg border-t-4 bg-white px-3 py-2 shadow-sm ${accent}`}>
         <div className="flex items-center justify-between gap-1">
@@ -399,7 +399,7 @@ export default function TableroCamiones({ pedidos: initialPedidos, camiones, onE
         onDragEnd={handleDragEnd}
       >
         <div
-          className="grid gap-4"
+          className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 md:grid md:overflow-visible md:mx-0 md:px-0 md:pb-0"
           style={{ gridTemplateColumns: `repeat(${columnas.length}, minmax(0, 1fr))` }}
         >
           {columnas.map((col) => (
