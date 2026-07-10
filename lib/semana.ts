@@ -48,3 +48,17 @@ export function formatRangoSemana(lunes: Date): string {
 export function esHoy(date: Date): boolean {
   return toDateStr(date) === toDateStr(new Date());
 }
+
+/** Versión corta del rango de semana, pensada para mensajes (ej. "6-10 julio"). */
+export function formatRangoSemanaCorto(lunes: Date): string {
+  const viernes = addDias(lunes, 4);
+  if (lunes.getMonth() === viernes.getMonth()) {
+    return `${lunes.getDate()}-${viernes.getDate()} ${viernes.toLocaleDateString("es-ES", {
+      month: "long",
+    })}`;
+  }
+  return `${lunes.toLocaleDateString("es-ES", { day: "numeric", month: "short" })} - ${viernes.toLocaleDateString(
+    "es-ES",
+    { day: "numeric", month: "short" }
+  )}`;
+}

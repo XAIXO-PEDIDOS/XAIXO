@@ -27,8 +27,10 @@ import {
   diasLaborables,
   formatDiaCorto,
   formatRangoSemana,
+  formatRangoSemanaCorto,
   esHoy,
 } from "@/lib/semana";
+import { calcularResumenSemanal, formatearResumenSemanal } from "@/lib/resumenSemanal";
 
 // ─── Colores por camión / tipo ───────────────────────────────────────────────
 
@@ -289,6 +291,13 @@ export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit }: P
     setLunes(lunesDeSemana(new Date()));
   }
 
+  function enviarResumenPorWhatsApp() {
+    const resumen = calcularResumenSemanal(pedidos, dias);
+    const mensaje = formatearResumenSemanal(resumen, formatRangoSemanaCorto(lunes));
+    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   function handleEntregar(pedidoId: string) {
     setPedidos((prev) =>
       prev.map((p) =>
@@ -345,7 +354,7 @@ export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit }: P
   return (
     <div>
       {/* ── Navegación de semana ── */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col gap-2 mb-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
           <button
             onClick={irASemanaAnterior}
@@ -361,12 +370,21 @@ export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit }: P
           </button>
           <span className="text-sm font-semibold text-gray-800">{semanaStr}</span>
         </div>
-        <button
-          onClick={irASemanaActual}
-          className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
-        >
-          Hoy
-        </button>
+        <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
+          <button
+            onClick={enviarResumenPorWhatsApp}
+            className="min-h-11 md:min-h-0 inline-flex items-center justify-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition-colors"
+            title="Calcula el resumen de esta semana y abre WhatsApp para enviarlo"
+          >
+            📤 Enviar resumen
+          </button>
+          <button
+            onClick={irASemanaActual}
+            className="min-h-11 md:min-h-0 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
+          >
+            Hoy
+          </button>
+        </div>
       </div>
 
       {/* ── Grid de días ── */}
