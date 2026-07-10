@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { Camion, Pedido } from "@/types/database";
 import PedidoCard from "./PedidoCard";
 import PedidoForm from "./PedidoForm";
+import PedidoVistaPrevia from "./PedidoVistaPrevia";
 import CalendarioSemanal from "@/components/calendario/CalendarioSemanal";
 import TableroCamiones from "@/components/tablero/TableroCamiones";
 import Papelera from "./Papelera";
@@ -28,6 +29,7 @@ export default function PedidosView({
   const [vista, setVista] = useState<Vista>("calendario");
   const [modalOpen, setModalOpen] = useState(false);
   const [pedidoEditar, setPedidoEditar] = useState<Pedido | undefined>();
+  const [pedidoVer, setPedidoVer] = useState<Pedido | undefined>();
 
   function openCreate() {
     setPedidoEditar(undefined);
@@ -41,14 +43,29 @@ export default function PedidosView({
     setModalOpen(false);
     setPedidoEditar(undefined);
   }
+  function openVer(p: Pedido) {
+    setPedidoVer(p);
+  }
+  function closeVer() {
+    setPedidoVer(undefined);
+  }
+  function editarDesdeVistaPrevia() {
+    if (!pedidoVer) return;
+    const p = pedidoVer;
+    closeVer();
+    openEdit(p);
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") closeModal();
+      if (e.key === "Escape") {
+        closeModal();
+        closeVer();
+      }
     }
-    if (modalOpen) window.addEventListener("keydown", onKey);
+    if (modalOpen || pedidoVer) window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [modalOpen]);
+  }, [modalOpen, pedidoVer]);
 
   const pendientes = pedidos.filter((p) => p.estado === "pendiente");
   const confirmados = pedidos.filter((p) => p.estado === "confirmado");
@@ -103,9 +120,9 @@ export default function PedidosView({
 
       {/* ── Contenido según vista ── */}
       {vista === "calendario" ? (
-        <CalendarioSemanal pedidos={pedidos} onEdit={openEdit} />
+        <CalendarioSemanal pedidos={pedidos} onEdit={openEdit} onVer={openVer} />
       ) : vista === "tablero" ? (
-        <TableroCamiones pedidos={pedidos} camiones={camiones} onEdit={openEdit} />
+        <TableroCamiones pedidos={pedidos} camiones={camiones} onEdit={openEdit} onVer={openVer} />
       ) : vista === "papelera" ? (
         <Papelera pedidos={pedidosEliminados} />
       ) : (
@@ -125,7 +142,7 @@ export default function PedidosView({
                   Confirmados ({confirmados.length})
                 </h3>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {confirmados.map((p) => <PedidoCard key={p.id} pedido={p} onEdit={openEdit} />)}
+                  {confirmados.map((p) => <PedidoCard key={p.id} pedido={p} onEdit={openEdit} onVer={openVer} />)}
                 </div>
               </section>
             )}
@@ -135,7 +152,7 @@ export default function PedidosView({
                   Pendientes ({pendientes.length})
                 </h3>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {pendientes.map((p) => <PedidoCard key={p.id} pedido={p} onEdit={openEdit} />)}
+                  {pendientes.map((p) => <PedidoCard key={p.id} pedido={p} onEdit={openEdit} onVer={openVer} />)}
                 </div>
               </section>
             )}
@@ -145,7 +162,7 @@ export default function PedidosView({
                   Cerrados ({cerrados.length})
                 </h3>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {cerrados.map((p) => <PedidoCard key={p.id} pedido={p} onEdit={openEdit} />)}
+                  {cerrados.map((p) => <PedidoCard key={p.id} pedido={p} onEdit={openEdit} onVer={openVer} />)}
                 </div>
               </section>
             )}
@@ -180,6 +197,15 @@ export default function PedidosView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Modal de vista previa (solo lectura) ── */}
+      {pedidoVer && (
+        <PedidoVistaPrevia
+          pedido={pedidoVer}
+          onClose={closeVer}
+          onEditar={editarDesdeVistaPrevia}
+        />
       )}
     </>
   );

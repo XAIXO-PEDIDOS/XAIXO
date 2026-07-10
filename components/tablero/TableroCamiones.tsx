@@ -66,12 +66,14 @@ function ContenidoTarjeta({
   onEntregar,
   onRevertir,
   onEliminar,
+  onVer,
 }: {
   pedido: Pedido;
   overlay?: boolean;
   onEntregar?: (pedidoId: string) => void;
   onRevertir?: (pedidoId: string) => void;
   onEliminar?: (pedidoId: string) => void;
+  onVer?: (pedido: Pedido) => void;
 }) {
   const bloqueado = pedido.estado === "entregado" || pedido.estado === "cancelado";
   const { bg, border, texto } = coloresPedido(pedido);
@@ -141,6 +143,16 @@ function ContenidoTarjeta({
           />
         </div>
       )}
+      {!overlay && onVer && (
+        <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => onVer(pedido)}
+            className="w-full rounded border border-gray-200 bg-white py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+          >
+            👁 Ver
+          </button>
+        </div>
+      )}
 
       {/* Estado badge */}
       {pedido.estado !== "pendiente" && (
@@ -168,12 +180,14 @@ function TarjetaArrastrable({
   onEntregar,
   onRevertir,
   onEliminar,
+  onVer,
 }: {
   pedido: Pedido;
   onEdit: (p: Pedido) => void;
   onEntregar: (pedidoId: string) => void;
   onRevertir: (pedidoId: string) => void;
   onEliminar: (pedidoId: string) => void;
+  onVer: (p: Pedido) => void;
 }) {
   // trailer_fabrica y bloqueados no se pueden arrastrar
   const bloqueado = pedido.estado === "entregado" || pedido.estado === "cancelado";
@@ -208,7 +222,7 @@ function TarjetaArrastrable({
         bloqueado || esTrailer ? "cursor-default" : "cursor-grab active:cursor-grabbing"
       }
     >
-      <ContenidoTarjeta pedido={pedido} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} />
+      <ContenidoTarjeta pedido={pedido} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} onVer={onVer} />
     </div>
   );
 }
@@ -224,6 +238,7 @@ interface ColumnaProps {
   onEntregar: (pedidoId: string) => void;
   onRevertir: (pedidoId: string) => void;
   onEliminar: (pedidoId: string) => void;
+  onVer: (p: Pedido) => void;
   camiones: Camion[];
   puedeRecibir: boolean;
 }
@@ -237,6 +252,7 @@ function ColumnaDroppable({
   onEntregar,
   onRevertir,
   onEliminar,
+  onVer,
   camiones,
   puedeRecibir,
 }: ColumnaProps) {
@@ -271,7 +287,7 @@ function ColumnaDroppable({
         `}
       >
         {pedidos.map((p) => (
-          <TarjetaArrastrable key={p.id} pedido={p} onEdit={onEdit} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} />
+          <TarjetaArrastrable key={p.id} pedido={p} onEdit={onEdit} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} onVer={onVer} />
         ))}
         {pedidos.length === 0 && (
           <p className="pt-8 text-center text-xs text-gray-300">—</p>
@@ -290,9 +306,10 @@ interface Props {
   pedidos: Pedido[];
   camiones: Camion[];
   onEdit: (p: Pedido) => void;
+  onVer: (p: Pedido) => void;
 }
 
-export default function TableroCamiones({ pedidos: initialPedidos, camiones, onEdit }: Props) {
+export default function TableroCamiones({ pedidos: initialPedidos, camiones, onEdit, onVer }: Props) {
   const [pedidos, setPedidos] = useState<Pedido[]>(initialPedidos);
   const [arrastrandoPedido, setArrastrandoPedido] = useState<Pedido | null>(null);
 
@@ -419,6 +436,7 @@ export default function TableroCamiones({ pedidos: initialPedidos, camiones, onE
               onEntregar={handleEntregar}
               onRevertir={handleRevertirExito}
               onEliminar={handleEliminar}
+              onVer={onVer}
               camiones={camiones}
               puedeRecibir={columnaAceptaDrop(col.id)}
             />

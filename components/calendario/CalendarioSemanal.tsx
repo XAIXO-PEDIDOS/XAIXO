@@ -72,12 +72,14 @@ function ContenidoTarjeta({
   onEntregar,
   onRevertir,
   onEliminar,
+  onVer,
 }: {
   pedido: Pedido;
   overlay?: boolean;
   onEntregar?: (pedidoId: string) => void;
   onRevertir?: (pedidoId: string) => void;
   onEliminar?: (pedidoId: string) => void;
+  onVer?: (pedido: Pedido) => void;
 }) {
   const bloqueado =
     pedido.estado === "entregado" || pedido.estado === "cancelado";
@@ -144,6 +146,16 @@ function ContenidoTarjeta({
           />
         </div>
       )}
+      {!overlay && onVer && (
+        <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => onVer(pedido)}
+            className="w-full rounded border border-gray-200 bg-white py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+          >
+            👁 Ver
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -156,12 +168,14 @@ function TarjetaArrastrable({
   onEntregar,
   onRevertir,
   onEliminar,
+  onVer,
 }: {
   pedido: Pedido;
   onEdit: (p: Pedido) => void;
   onEntregar: (pedidoId: string) => void;
   onRevertir: (pedidoId: string) => void;
   onEliminar: (pedidoId: string) => void;
+  onVer: (p: Pedido) => void;
 }) {
   const bloqueado =
     pedido.estado === "entregado" || pedido.estado === "cancelado";
@@ -185,7 +199,7 @@ function TarjetaArrastrable({
       className={bloqueado ? "cursor-default" : "cursor-grab active:cursor-grabbing"}
       title={bloqueado ? "Pedido bloqueado" : "Arrastrar para cambiar de día · Clic para editar"}
     >
-      <ContenidoTarjeta pedido={pedido} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} />
+      <ContenidoTarjeta pedido={pedido} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} onVer={onVer} />
     </div>
   );
 }
@@ -199,6 +213,7 @@ function ColumnaDroppable({
   onEntregar,
   onRevertir,
   onEliminar,
+  onVer,
 }: {
   fecha: Date;
   pedidos: Pedido[];
@@ -206,6 +221,7 @@ function ColumnaDroppable({
   onEntregar: (pedidoId: string) => void;
   onRevertir: (pedidoId: string) => void;
   onEliminar: (pedidoId: string) => void;
+  onVer: (p: Pedido) => void;
 }) {
   const dateStr = toDateStr(fecha);
   const { setNodeRef, isOver } = useDroppable({ id: dateStr });
@@ -244,7 +260,7 @@ function ColumnaDroppable({
         `}
       >
         {pedidos.map((p) => (
-          <TarjetaArrastrable key={p.id} pedido={p} onEdit={onEdit} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} />
+          <TarjetaArrastrable key={p.id} pedido={p} onEdit={onEdit} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} onVer={onVer} />
         ))}
         {pedidos.length === 0 && (
           <div className="flex flex-col items-center pt-10 text-gray-200">
@@ -263,9 +279,10 @@ function ColumnaDroppable({
 interface Props {
   pedidos: Pedido[];
   onEdit: (p: Pedido) => void;
+  onVer: (p: Pedido) => void;
 }
 
-export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit }: Props) {
+export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit, onVer }: Props) {
   const [pedidos, setPedidos] = useState<Pedido[]>(initialPedidos);
   const [lunes, setLunes] = useState(() => lunesDeSemana(new Date()));
   const [arrastrandoPedido, setArrastrandoPedido] = useState<Pedido | null>(null);
@@ -416,6 +433,7 @@ export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit }: P
               onEntregar={handleEntregar}
               onRevertir={handleRevertirExito}
               onEliminar={handleEliminar}
+              onVer={onVer}
             />
           ))}
         </div>

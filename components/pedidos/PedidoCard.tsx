@@ -8,6 +8,7 @@ import BotonEliminar from "./BotonEliminar";
 interface Props {
   pedido: Pedido;
   onEdit: (p: Pedido) => void;
+  onVer: (p: Pedido) => void;
 }
 
 function cardColors(pedido: Pedido) {
@@ -35,7 +36,7 @@ function estadoBadge(estado: string) {
   }
 }
 
-export default function PedidoCard({ pedido, onEdit }: Props) {
+export default function PedidoCard({ pedido, onEdit, onVer }: Props) {
   const bloqueado = pedido.estado === "entregado" || pedido.estado === "cancelado";
   const { bg, border, text } = cardColors(pedido);
   const isDashed = pedido.estado === "pendiente";
@@ -132,6 +133,12 @@ export default function PedidoCard({ pedido, onEdit }: Props) {
           >
             🖨
           </a>
+          <button
+            onClick={() => onVer(pedido)}
+            className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:bg-white hover:text-gray-900 transition-colors border border-transparent hover:border-gray-200 md:min-h-0 md:min-w-0"
+          >
+            👁 Ver
+          </button>
           <button
             onClick={() => onEdit(pedido)}
             className="inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:bg-white hover:text-gray-900 transition-colors border border-transparent hover:border-gray-200 md:min-h-0 md:min-w-0"
