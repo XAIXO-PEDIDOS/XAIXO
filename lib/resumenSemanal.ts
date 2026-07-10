@@ -1,28 +1,25 @@
 import type { Pedido } from "@/types/database";
 import { toDateStr } from "./semana";
 
-// Los emojis se construyen a partir de su punto de código Unicode (\u{...})
-// en vez de pegar el carácter literal en el archivo. Un emoji "literal" son
-// varios bytes UTF-8 guardados en disco: si algún paso de la cadena (editor,
-// git, el bundler) toca el archivo con una codificación que no sea UTF-8,
-// esos bytes se corrompen y WhatsApp los recibe como "�". Un escape \u{...}
-// es ASCII puro, así que no hay bytes multibyte que corromper: el motor de
-// JS siempre construye el mismo carácter sin importar cómo esté guardado
-// el archivo.
-const EMOJI = {
-  clipboard: "\u{1F4CB}", // 📋
-  azul: "\u{1F535}", // 🔵
-  verde: "\u{1F7E2}", // 🟢
-  blanco: "\u{26AA}", // ⚪
-  naranja: "\u{1F7E0}", // 🟠
-  advertencia: "\u{26A0}\u{FE0F}", // ⚠️
-  check: "\u{2705}", // ✅
-  paquete: "\u{1F4E6}", // 📦
-  trofeo: "\u{1F3C6}", // 🏆
-  fuego: "\u{1F525}", // 🔥
+// IMPORTANTE — no usar emojis pictográficos (📋🔵🟢🟠⚠️✅📦🏆🔥) aquí.
+// No es un problema de codificación del archivo: comprobado contra el
+// endpoint real (curl siguiendo la redirección 302 de https://wa.me/...),
+// WhatsApp sustituye esos caracteres por U+FFFD ("�") en el propio
+// `Location` de la redirección, antes de que el mensaje llegue a mostrarse.
+// Es un filtro del lado de WhatsApp, no algo que se pueda arreglar desde
+// nuestro código. Los símbolos de abajo sí sobreviven esa redirección
+// (verificado el mismo modo) — flechas, formas geométricas simples y el
+// check "✓" — y las cabeceras de sección usan *negrita* nativa de
+// WhatsApp (asteriscos) en vez de un icono.
+const SIMBOLOS = {
   subida: "\u{2191}", // ↑
   bajada: "\u{2193}", // ↓
   igual: "\u{2192}", // →
+  circulo: "\u{25CF}", // ● (primer camión)
+  cuadrado: "\u{25A0}", // ■ (segundo camión)
+  diamante: "\u{25C6}", // ◆ (resto de camiones)
+  triangulo: "\u{25B2}", // ▲ (tráilers fábrica)
+  check: "\u{2713}", // ✓ (todo entregado)
 } as const;
 
 export interface ResumenCamion {
@@ -72,6 +69,8 @@ const KG_POR_UNIDAD: Record<string, number> = {
   bigbags: 750,
   "big-bag": 750,
   "big-bags": 750,
+  big: 750,
+  bigs: 750,
   // Kilos
   kg: 1,
   kilo: 1,
@@ -162,11 +161,11 @@ export function calcularResumenSemanal(pedidos: Pedido[], dias: Date[]): Resumen
   };
 }
 
-function emojiCamion(nombre: string): string {
+function simboloCamion(nombre: string): string {
   const n = nombre.toLowerCase();
-  if (n.includes("franjo")) return EMOJI.azul;
-  if (n.includes("david")) return EMOJI.verde;
-  return EMOJI.blanco;
+  if (n.includes("franjo")) return SIMBOLOS.circulo;
+  if (n.includes("david")) return SIMBOLOS.cuadrado;
+  return SIMBOLOS.diamante;
 }
 
 function formatToneladas(n: number): string {
@@ -174,7 +173,11 @@ function formatToneladas(n: number): string {
 }
 
 function formatKg(kg: number): string {
-  return Math.round(kg).toLocaleString("es-ES");
+  // useGrouping debe ir explícito: en Node/V8 el valor por defecto de
+  // toLocaleString() no siempre agrupa los miles aunque el locale es-ES
+  // esté disponible (probado: sin esta opción, 6875 se queda en "6875"
+  // en vez de "6.875").
+  return Math.round(kg).toLocaleString("es-ES", { useGrouping: true });
 }
 
 /**
@@ -190,13 +193,13 @@ export function formatearResumenSemanal(
   const diff = resumen.totalPedidos - totalSemanaAnterior;
   const lineaComparacion =
     diff > 0
-      ? `${EMOJI.subida} +${diff} pedidos vs semana pasada`
+      ? `${SIMBOLOS.subida} +${diff} pedidos vs semana pasada`
       : diff < 0
-      ? `${EMOJI.bajada} ${diff} pedidos vs semana pasada`
-      : `${EMOJI.igual} igual que la semana pasada`;
+      ? `${SIMBOLOS.bajada} ${diff} pedidos vs semana pasada`
+      : `${SIMBOLOS.igual} igual que la semana pasada`;
 
   const lineas: string[] = [
-    `${EMOJI.clipboard} Resumen semana ${rangoLabel}`,
+    `*Resumen semana ${rangoLabel}*`,
     lineaComparacion,
     "",
     `Total pedidos: ${resumen.totalPedidos}`,
@@ -205,28 +208,28 @@ export function formatearResumenSemanal(
   for (const c of resumen.porCamion) {
     const toneladasTxt = c.toneladas > 0 ? ` (${formatToneladas(c.toneladas)}t)` : "";
     lineas.push(
-      `${emojiCamion(c.nombre)} ${c.nombre}: ${c.pedidos} pedido${c.pedidos === 1 ? "" : "s"}${toneladasTxt}`
+      `${simboloCamion(c.nombre)} ${c.nombre}: ${c.pedidos} pedido${c.pedidos === 1 ? "" : "s"}${toneladasTxt}`
     );
   }
 
   if (resumen.trailerFabrica > 0) {
-    lineas.push(`${EMOJI.naranja} Tráilers fábrica: ${resumen.trailerFabrica}`);
+    lineas.push(`${SIMBOLOS.triangulo} Tráilers fábrica: ${resumen.trailerFabrica}`);
   }
 
   lineas.push(
     resumen.pendientesSinEntregar > 0
-      ? `${EMOJI.advertencia} Pendientes de entregar: ${resumen.pendientesSinEntregar}`
-      : `${EMOJI.check} Todo entregado`
+      ? `! Pendientes de entregar: ${resumen.pendientesSinEntregar}`
+      : `${SIMBOLOS.check} Todo entregado`
   );
 
   if (resumen.kgTotal > 0) {
     lineas.push("");
-    lineas.push(`${EMOJI.paquete} Material suministrado: ${formatKg(resumen.kgTotal)} kg`);
+    lineas.push(`*Material suministrado:* ${formatKg(resumen.kgTotal)} kg`);
   }
 
   if (resumen.topClientes.length > 0) {
     lineas.push("");
-    lineas.push(`${EMOJI.trofeo} Top clientes:`);
+    lineas.push("*Top clientes:*");
     resumen.topClientes.forEach((c, i) => {
       lineas.push(`${i + 1}. ${c.nombre} (${c.pedidos} pedido${c.pedidos === 1 ? "" : "s"})`);
     });
@@ -234,7 +237,7 @@ export function formatearResumenSemanal(
 
   if (resumen.materialesTop.length > 0) {
     lineas.push("");
-    lineas.push(`${EMOJI.fuego} Materiales más pedidos:`);
+    lineas.push("*Materiales más pedidos:*");
     lineas.push(resumen.materialesTop.map((m) => `${m.material} (${m.veces})`).join(", "));
   }
 
