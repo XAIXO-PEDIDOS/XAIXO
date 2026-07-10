@@ -91,8 +91,14 @@ function ContenidoTarjeta({
         ${bg} ${border} ${borde}
         ${bloqueado ? "opacity-60" : ""}
         ${overlay ? "shadow-xl rotate-1 scale-105" : ""}
+        ${pedido.requiere_revision ? "ring-2 ring-purple-400" : ""}
       `}
     >
+      {pedido.requiere_revision && (
+        <p className="mb-1 truncate text-[10px] font-medium text-purple-600">
+          📩 WhatsApp — revisar
+        </p>
+      )}
       <div className="flex items-center gap-1 min-w-0">
         {bloqueado && <span className="shrink-0">🔒</span>}
         <span className="font-semibold text-gray-900 truncate">{pedido.cliente}</span>

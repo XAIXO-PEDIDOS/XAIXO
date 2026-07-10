@@ -52,10 +52,18 @@ export default function PedidoCard({ pedido, onEdit }: Props) {
     <div
       className={`rounded-xl border-2 p-4 shadow-sm transition-all ${bg} ${
         isDashed ? "border-dashed" : "border-solid"
-      } ${border} ${bloqueado ? "opacity-60" : ""}`}
+      } ${border} ${bloqueado ? "opacity-60" : ""} ${
+        pedido.requiere_revision ? "ring-2 ring-purple-400 ring-offset-1" : ""
+      }`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
+
+          {pedido.requiere_revision && (
+            <span className="mb-1.5 inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+              📩 Desde WhatsApp — pendiente de revisar
+            </span>
+          )}
 
           {/* Cliente + estado */}
           <div className="flex items-center gap-2 flex-wrap">

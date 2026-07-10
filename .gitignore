@@ -2,5 +2,9 @@
 .next/
 *.tsbuildinfo
 
+# Secretos — nunca debe subirse a git (menos aún a un repo público).
+.env.local
+.env*.local
+
 # Contiene precios reales de productos — no debe subirse a un repo público.
 xaixo-productos-import.sql

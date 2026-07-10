@@ -87,6 +87,9 @@ export async function updatePedido(
     franja_horaria: (formData.get("franja_horaria") as string) || null,
     estado: formData.get("estado") as EstadoPedido,
     notas: (formData.get("notas") as string) || null,
+    // Guardar manualmente desde el formulario cuenta como "revisado",
+    // sin importar qué estado se elija.
+    requiere_revision: false,
   };
 
   const { error } = await supabase.from("pedidos").update(payload).eq("id", id);
