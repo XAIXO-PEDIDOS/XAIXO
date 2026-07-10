@@ -6,6 +6,35 @@ import PedidosView from "@/components/pedidos/PedidosView";
 import ImportarClientesModal from "@/components/clientes/ImportarClientesModal";
 import type { Pedido, Camion, Cliente } from "@/types/database";
 
+type NombreCliente = Pick<Cliente, "nombre" | "nombre_comercial">;
+
+// PostgREST limita cada respuesta a 1000 filas por defecto (db-max-rows).
+// Con ~2240 clientes importados, una sola consulta sin paginar se queda
+// corta y, al no haber ORDER BY, qué 1000 filas caen dentro del corte es
+// prácticamente arbitrario — así que cualquier cliente podía faltar en
+// las sugerencias. Aquí se pagina hasta traerlos todos.
+async function fetchTodosLosClientes(
+  supabase: ReturnType<typeof createClient>
+): Promise<NombreCliente[]> {
+  const PAGE_SIZE = 1000;
+  const resultado: NombreCliente[] = [];
+  let desde = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("clientes")
+      .select("nombre, nombre_comercial")
+      .range(desde, desde + PAGE_SIZE - 1);
+
+    if (error || !data) break;
+    resultado.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    desde += PAGE_SIZE;
+  }
+
+  return resultado;
+}
+
 export default async function DashboardPage() {
   const supabase = createClient();
 
@@ -15,7 +44,7 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
-  const [{ data: pedidos }, { data: pedidosEliminados }, { data: camiones }, { data: clientes }] =
+  const [{ data: pedidos }, { data: pedidosEliminados }, { data: camiones }, clientes] =
     await Promise.all([
       supabase
         .from("pedidos")
@@ -31,17 +60,13 @@ export default async function DashboardPage() {
         .from("camiones")
         .select("*")
         .order("nombre", { ascending: true }),
-      supabase
-        .from("clientes")
-        .select("nombre, nombre_comercial"),
+      fetchTodosLosClientes(supabase),
     ]);
 
   // Clientes únicos para el autocompletado: nombres ya usados en pedidos
   // anteriores + nombre/nombre comercial de la tabla clientes (importada
   // desde Softek).
-  const nombresDeClientesTabla = (clientes ?? []).flatMap((c: Pick<Cliente, "nombre" | "nombre_comercial">) =>
-    [c.nombre, c.nombre_comercial].filter(Boolean)
-  );
+  const nombresDeClientesTabla = clientes.flatMap((c) => [c.nombre, c.nombre_comercial].filter(Boolean));
   const clientesSugeridos = Array.from(
     new Set([
       ...(pedidos ?? []).map((p: Pedido) => p.cliente).filter(Boolean),
