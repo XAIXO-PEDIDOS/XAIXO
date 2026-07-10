@@ -33,11 +33,12 @@ const MATERIAL_VACIO: MaterialItem = { material: "", cantidad: null, unidad: "" 
 interface Props {
   camiones: Camion[];
   clientesSugeridos: string[];
+  materialesSugeridos: string[];
   pedido?: Pedido;
   onClose: () => void;
 }
 
-export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClose }: Props) {
+export default function PedidoForm({ camiones, clientesSugeridos, materialesSugeridos, pedido, onClose }: Props) {
   const isEdit = !!pedido;
   const [state, formAction] = useFormState(isEdit ? updatePedido : createPedido, { error: null });
 
@@ -48,6 +49,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
   const [materiales, setMateriales] = useState<MaterialItem[]>(
     pedido?.materiales?.length ? pedido.materiales : [{ ...MATERIAL_VACIO }]
   );
+  const [filaMaterialAbierta, setFilaMaterialAbierta] = useState<number | null>(null);
 
   const bloqueado = pedido?.estado === "entregado" || pedido?.estado === "cancelado";
   const camionSeleccionado = camiones.find((c) => c.id === camionId);
@@ -72,6 +74,12 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
   const sugerenciasFiltradas = clientesSugeridos.filter(
     (c) => c.toLowerCase().includes(clienteInput.toLowerCase()) && c !== clienteInput
   );
+
+  function sugerenciasMaterial(texto: string): string[] {
+    if (!texto.trim()) return [];
+    const q = texto.toLowerCase();
+    return materialesSugeridos.filter((m) => m.toLowerCase().includes(q) && m !== texto).slice(0, 8);
+  }
 
   return (
     <form action={formAction} className="space-y-5">
@@ -167,14 +175,37 @@ export default function PedidoForm({ camiones, clientesSugeridos, pedido, onClos
           {materiales.map((m, i) => (
             <div key={i} className="flex flex-col gap-2 md:flex-row md:items-center">
               {/* Nombre */}
-              <input
-                type="text"
-                value={m.material}
-                disabled={bloqueado}
-                onChange={(e) => updateMaterial(i, "material", e.target.value)}
-                placeholder="Material"
-                className="w-full min-h-11 md:min-h-0 md:flex-1 md:min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
-              />
+              <div className="relative w-full md:flex-1 md:min-w-0">
+                <input
+                  type="text"
+                  value={m.material}
+                  disabled={bloqueado}
+                  onChange={(e) => updateMaterial(i, "material", e.target.value)}
+                  onFocus={() => setFilaMaterialAbierta(i)}
+                  onBlur={() => setTimeout(() => setFilaMaterialAbierta(null), 150)}
+                  autoComplete="off"
+                  placeholder="Material"
+                  className="w-full min-h-11 md:min-h-0 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+                />
+                {filaMaterialAbierta === i && sugerenciasMaterial(m.material).length > 0 && (
+                  <ul className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-40 overflow-y-auto">
+                    {sugerenciasMaterial(m.material).map((sugerencia) => (
+                      <li key={sugerencia}>
+                        <button
+                          type="button"
+                          onMouseDown={() => {
+                            updateMaterial(i, "material", sugerencia);
+                            setFilaMaterialAbierta(null);
+                          }}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                        >
+                          {sugerencia}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               {/* Cantidad + unidad + quitar: fila propia en móvil, se integran en la fila principal en escritorio */}
               <div className="flex gap-2 items-center md:contents">
                 {/* Cantidad */}

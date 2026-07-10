@@ -4,9 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/auth/LogoutButton";
 import PedidosView from "@/components/pedidos/PedidosView";
 import ImportarClientesModal from "@/components/clientes/ImportarClientesModal";
-import type { Pedido, Camion, Cliente } from "@/types/database";
+import type { Pedido, Camion, Cliente, Producto } from "@/types/database";
 
 type NombreCliente = Pick<Cliente, "nombre" | "nombre_comercial">;
+type DescripcionProducto = Pick<Producto, "descripcion">;
 
 // PostgREST limita cada respuesta a 1000 filas por defecto (db-max-rows).
 // Con ~2240 clientes importados, una sola consulta sin paginar se queda
@@ -35,6 +36,32 @@ async function fetchTodosLosClientes(
   return resultado;
 }
 
+// Mismo motivo que fetchTodosLosClientes: con ~2018 productos, una sola
+// consulta sin paginar se quedaría corta por el límite de 1000 filas de
+// PostgREST.
+async function fetchTodosLosProductos(
+  supabase: ReturnType<typeof createClient>
+): Promise<DescripcionProducto[]> {
+  const PAGE_SIZE = 1000;
+  const resultado: DescripcionProducto[] = [];
+  let desde = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("productos")
+      .select("descripcion")
+      .eq("activo", true)
+      .range(desde, desde + PAGE_SIZE - 1);
+
+    if (error || !data) break;
+    resultado.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    desde += PAGE_SIZE;
+  }
+
+  return resultado;
+}
+
 export default async function DashboardPage() {
   const supabase = createClient();
 
@@ -44,7 +71,7 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
-  const [{ data: pedidos }, { data: pedidosEliminados }, { data: camiones }, clientes] =
+  const [{ data: pedidos }, { data: pedidosEliminados }, { data: camiones }, clientes, productos] =
     await Promise.all([
       supabase
         .from("pedidos")
@@ -61,6 +88,7 @@ export default async function DashboardPage() {
         .select("*")
         .order("nombre", { ascending: true }),
       fetchTodosLosClientes(supabase),
+      fetchTodosLosProductos(supabase),
     ]);
 
   // Clientes únicos para el autocompletado: nombres ya usados en pedidos
@@ -71,6 +99,18 @@ export default async function DashboardPage() {
     new Set([
       ...(pedidos ?? []).map((p: Pedido) => p.cliente).filter(Boolean),
       ...nombresDeClientesTabla,
+    ])
+  ) as string[];
+
+  // Materiales únicos para el autocompletado: nombres ya usados en líneas
+  // de pedidos anteriores + descripción de productos activos.
+  const materialesDePedidos = (pedidos ?? []).flatMap((p: Pedido) =>
+    (p.materiales ?? []).map((m) => m.material)
+  );
+  const materialesSugeridos = Array.from(
+    new Set([
+      ...materialesDePedidos.filter(Boolean),
+      ...productos.map((p) => p.descripcion).filter(Boolean),
     ])
   ) as string[];
 
@@ -101,6 +141,7 @@ export default async function DashboardPage() {
           pedidosEliminados={(pedidosEliminados ?? []) as Pedido[]}
           camiones={(camiones ?? []) as Camion[]}
           clientesSugeridos={clientesSugeridos}
+          materialesSugeridos={materialesSugeridos}
         />
       </main>
     </div>

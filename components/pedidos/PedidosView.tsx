@@ -15,9 +15,16 @@ interface Props {
   pedidosEliminados: Pedido[];
   camiones: Camion[];
   clientesSugeridos: string[];
+  materialesSugeridos: string[];
 }
 
-export default function PedidosView({ pedidos, pedidosEliminados, camiones, clientesSugeridos }: Props) {
+export default function PedidosView({
+  pedidos,
+  pedidosEliminados,
+  camiones,
+  clientesSugeridos,
+  materialesSugeridos,
+}: Props) {
   const [vista, setVista] = useState<Vista>("calendario");
   const [modalOpen, setModalOpen] = useState(false);
   const [pedidoEditar, setPedidoEditar] = useState<Pedido | undefined>();
@@ -166,6 +173,7 @@ export default function PedidosView({ pedidos, pedidosEliminados, camiones, clie
               <PedidoForm
                 camiones={camiones}
                 clientesSugeridos={clientesSugeridos}
+                materialesSugeridos={materialesSugeridos}
                 pedido={pedidoEditar}
                 onClose={closeModal}
               />

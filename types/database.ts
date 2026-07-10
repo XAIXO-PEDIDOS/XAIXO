@@ -26,6 +26,18 @@ export interface Cliente {
   created_at: string;
 }
 
+export interface Producto {
+  id: string;
+  codigo_softek: string | null;
+  descripcion: string;
+  precio: number | null;
+  ref_proveedor: string | null;
+  ean: string | null;
+  activo: boolean;
+  origen: string;
+  created_at: string;
+}
+
 export interface Pedido {
   id: string;
   cliente: string;

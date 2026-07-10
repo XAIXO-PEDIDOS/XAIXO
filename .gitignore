@@ -1,3 +1,6 @@
 ﻿node_modules/
 .next/
 *.tsbuildinfo
+
+# Contiene precios reales de productos — no debe subirse a un repo público.
+xaixo-productos-import.sql
