@@ -30,27 +30,6 @@ function estadoBadgeClasses(estado: string): string {
   }
 }
 
-// El webhook de WhatsApp guarda el mensaje original + el número de quien
-// escribió dentro de "notas" (no hay columnas separadas para eso). Aquí se
-// separa ese bloque del resto de notas para mostrarlo aparte y más legible.
-const MARCADOR_WHATSAPP = /--- Mensaje original de WhatsApp \(([^)]*)\) ---\n\n([\s\S]*)$/;
-
-function parseNotasWhatsapp(notas: string | null): {
-  notasExtra: string | null;
-  telefono: string | null;
-  mensajeOriginal: string | null;
-} {
-  if (!notas) return { notasExtra: null, telefono: null, mensajeOriginal: null };
-
-  const match = notas.match(MARCADOR_WHATSAPP);
-  if (!match || match.index == null) {
-    return { notasExtra: notas, telefono: null, mensajeOriginal: null };
-  }
-
-  const notasExtra = notas.slice(0, match.index).trim() || null;
-  return { notasExtra, telefono: match[1] || null, mensajeOriginal: match[2] };
-}
-
 function Campo({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) {
   return (
     <div>
@@ -69,7 +48,6 @@ export default function PedidoVistaPrevia({ pedido, onClose, onEditar }: Props) 
   });
 
   const materiales = pedido.materiales ?? [];
-  const { notasExtra, telefono, mensajeOriginal } = parseNotasWhatsapp(pedido.notas);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4">
@@ -86,14 +64,6 @@ export default function PedidoVistaPrevia({ pedido, onClose, onEditar }: Props) 
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          {pedido.requiere_revision && (
-            <div className="rounded-lg border border-purple-200 bg-purple-50 px-3 py-2">
-              <p className="text-xs font-semibold text-purple-700">
-                📩 Este pedido llegó por WhatsApp y aún no ha sido revisado
-              </p>
-            </div>
-          )}
-
           <div className="flex items-center gap-2 flex-wrap">
             <span
               className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${estadoBadgeClasses(
@@ -159,20 +129,10 @@ export default function PedidoVistaPrevia({ pedido, onClose, onEditar }: Props) 
             )}
           </div>
 
-          {notasExtra && (
+          {pedido.notas && (
             <Campo etiqueta="Notas">
-              <p className="whitespace-pre-wrap">{notasExtra}</p>
+              <p className="whitespace-pre-wrap">{pedido.notas}</p>
             </Campo>
-          )}
-
-          {pedido.requiere_revision && mensajeOriginal && (
-            <div className="rounded-lg border border-purple-200 bg-purple-50/60 p-3">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-purple-600">
-                Mensaje original de WhatsApp
-              </p>
-              {telefono && <p className="mb-1.5 text-xs text-purple-500">Desde: {telefono}</p>}
-              <p className="whitespace-pre-wrap text-sm text-gray-800">{mensajeOriginal}</p>
-            </div>
           )}
         </div>
 

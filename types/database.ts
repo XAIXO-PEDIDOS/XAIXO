@@ -55,6 +55,13 @@ export interface Pedido {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
-  requiere_revision: boolean;
   camiones?: Camion | null;
+}
+
+export interface MensajeWhatsapp {
+  id: string;
+  texto: string;
+  telefono: string | null;
+  recibido_en: string;
+  leido: boolean;
 }

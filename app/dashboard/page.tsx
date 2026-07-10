@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/auth/LogoutButton";
 import PedidosView from "@/components/pedidos/PedidosView";
 import ImportarClientesModal from "@/components/clientes/ImportarClientesModal";
-import type { Pedido, Camion, Cliente, Producto } from "@/types/database";
+import MensajesWhatsappModal from "@/components/whatsapp/MensajesWhatsappModal";
+import type { Pedido, Camion, Cliente, Producto, MensajeWhatsapp } from "@/types/database";
 
 type NombreCliente = Pick<Cliente, "nombre" | "nombre_comercial">;
 type DescripcionProducto = Pick<Producto, "descripcion">;
@@ -71,25 +72,35 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
-  const [{ data: pedidos }, { data: pedidosEliminados }, { data: camiones }, clientes, productos] =
-    await Promise.all([
-      supabase
-        .from("pedidos")
-        .select("*, camiones(*)")
-        .is("deleted_at", null)
-        .order("fecha_entrega", { ascending: true }),
-      supabase
-        .from("pedidos")
-        .select("*, camiones(*)")
-        .not("deleted_at", "is", null)
-        .order("deleted_at", { ascending: false }),
-      supabase
-        .from("camiones")
-        .select("*")
-        .order("nombre", { ascending: true }),
-      fetchTodosLosClientes(supabase),
-      fetchTodosLosProductos(supabase),
-    ]);
+  const [
+    { data: pedidos },
+    { data: pedidosEliminados },
+    { data: camiones },
+    clientes,
+    productos,
+    { data: mensajesWhatsapp },
+  ] = await Promise.all([
+    supabase
+      .from("pedidos")
+      .select("*, camiones(*)")
+      .is("deleted_at", null)
+      .order("fecha_entrega", { ascending: true }),
+    supabase
+      .from("pedidos")
+      .select("*, camiones(*)")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false }),
+    supabase
+      .from("camiones")
+      .select("*")
+      .order("nombre", { ascending: true }),
+    fetchTodosLosClientes(supabase),
+    fetchTodosLosProductos(supabase),
+    supabase
+      .from("mensajes_whatsapp")
+      .select("*")
+      .order("recibido_en", { ascending: false }),
+  ]);
 
   // Clientes únicos para el autocompletado: nombres ya usados en pedidos
   // anteriores + nombre/nombre comercial de la tabla clientes (importada
@@ -129,6 +140,7 @@ export default async function DashboardPage() {
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <span className="hidden text-sm text-gray-400 md:inline">{user.email}</span>
+            <MensajesWhatsappModal mensajes={(mensajesWhatsapp ?? []) as MensajeWhatsapp[]} />
             <ImportarClientesModal />
             <LogoutButton />
           </div>
