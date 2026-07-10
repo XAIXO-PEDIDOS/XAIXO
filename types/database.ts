@@ -15,6 +15,17 @@ export interface Camion {
   tipo: string;
 }
 
+export interface Cliente {
+  id: string;
+  codigo_softek: string | null;
+  nombre: string;
+  nombre_comercial: string | null;
+  telefono: string | null;
+  nif: string | null;
+  origen: string;
+  created_at: string;
+}
+
 export interface Pedido {
   id: string;
   cliente: string;

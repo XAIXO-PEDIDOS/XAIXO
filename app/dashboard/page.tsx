@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/auth/LogoutButton";
 import PedidosView from "@/components/pedidos/PedidosView";
-import type { Pedido, Camion } from "@/types/database";
+import ImportarClientesModal from "@/components/clientes/ImportarClientesModal";
+import type { Pedido, Camion, Cliente } from "@/types/database";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -14,26 +15,38 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
-  const [{ data: pedidos }, { data: pedidosEliminados }, { data: camiones }] = await Promise.all([
-    supabase
-      .from("pedidos")
-      .select("*, camiones(*)")
-      .is("deleted_at", null)
-      .order("fecha_entrega", { ascending: true }),
-    supabase
-      .from("pedidos")
-      .select("*, camiones(*)")
-      .not("deleted_at", "is", null)
-      .order("deleted_at", { ascending: false }),
-    supabase
-      .from("camiones")
-      .select("*")
-      .order("nombre", { ascending: true }),
-  ]);
+  const [{ data: pedidos }, { data: pedidosEliminados }, { data: camiones }, { data: clientes }] =
+    await Promise.all([
+      supabase
+        .from("pedidos")
+        .select("*, camiones(*)")
+        .is("deleted_at", null)
+        .order("fecha_entrega", { ascending: true }),
+      supabase
+        .from("pedidos")
+        .select("*, camiones(*)")
+        .not("deleted_at", "is", null)
+        .order("deleted_at", { ascending: false }),
+      supabase
+        .from("camiones")
+        .select("*")
+        .order("nombre", { ascending: true }),
+      supabase
+        .from("clientes")
+        .select("nombre, nombre_comercial"),
+    ]);
 
-  // Clientes únicos para el autocompletado
+  // Clientes únicos para el autocompletado: nombres ya usados en pedidos
+  // anteriores + nombre/nombre comercial de la tabla clientes (importada
+  // desde Softek).
+  const nombresDeClientesTabla = (clientes ?? []).flatMap((c: Pick<Cliente, "nombre" | "nombre_comercial">) =>
+    [c.nombre, c.nombre_comercial].filter(Boolean)
+  );
   const clientesSugeridos = Array.from(
-    new Set((pedidos ?? []).map((p: Pedido) => p.cliente).filter(Boolean))
+    new Set([
+      ...(pedidos ?? []).map((p: Pedido) => p.cliente).filter(Boolean),
+      ...nombresDeClientesTabla,
+    ])
   ) as string[];
 
   return (
@@ -51,6 +64,7 @@ export default async function DashboardPage() {
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <span className="hidden text-sm text-gray-400 md:inline">{user.email}</span>
+            <ImportarClientesModal />
             <LogoutButton />
           </div>
         </div>
