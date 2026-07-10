@@ -12,6 +12,11 @@ function respuestaTwiML(mensaje: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  if (!authToken) {
+    throw new Error("Falta la variable de entorno TWILIO_AUTH_TOKEN");
+  }
+
   const formData = await request.formData();
   const params: Record<string, string> = {};
   formData.forEach((value, key) => {
@@ -21,12 +26,7 @@ export async function POST(request: NextRequest) {
   // Verificar que la petición viene realmente de Twilio (y no de cualquiera
   // que conozca esta URL pública) antes de guardar nada.
   const firma = request.headers.get("x-twilio-signature") ?? "";
-  const firmaValida = twilio.validateRequest(
-    process.env.TWILIO_AUTH_TOKEN!,
-    firma,
-    request.url,
-    params
-  );
+  const firmaValida = twilio.validateRequest(authToken, firma, request.url, params);
 
   if (!firmaValida) {
     console.error("[whatsapp webhook] Firma de Twilio inválida");
