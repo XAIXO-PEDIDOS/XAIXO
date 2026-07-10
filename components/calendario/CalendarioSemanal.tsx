@@ -292,8 +292,14 @@ export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit }: P
   }
 
   function enviarResumenPorWhatsApp() {
+    const diasSemanaAnterior = diasLaborables(addDias(lunes, -7));
     const resumen = calcularResumenSemanal(pedidos, dias);
-    const mensaje = formatearResumenSemanal(resumen, formatRangoSemanaCorto(lunes));
+    const resumenAnterior = calcularResumenSemanal(pedidos, diasSemanaAnterior);
+    const mensaje = formatearResumenSemanal(
+      resumen,
+      formatRangoSemanaCorto(lunes),
+      resumenAnterior.totalPedidos
+    );
     const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   }
