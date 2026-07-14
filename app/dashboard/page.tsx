@@ -5,6 +5,7 @@ import LogoutButton from "@/components/auth/LogoutButton";
 import PedidosView from "@/components/pedidos/PedidosView";
 import ImportarClientesModal from "@/components/clientes/ImportarClientesModal";
 import MensajesWhatsappModal from "@/components/whatsapp/MensajesWhatsappModal";
+import BackupButton from "@/components/backup/BackupButton";
 import type { Pedido, Camion, Cliente, Producto, MensajeWhatsapp } from "@/types/database";
 
 type NombreCliente = Pick<Cliente, "nombre" | "nombre_comercial">;
@@ -142,6 +143,7 @@ export default async function DashboardPage() {
             <span className="hidden text-sm text-gray-400 md:inline">{user.email}</span>
             <MensajesWhatsappModal mensajes={(mensajesWhatsapp ?? []) as MensajeWhatsapp[]} />
             <ImportarClientesModal />
+            <BackupButton />
             <LogoutButton />
           </div>
         </div>
