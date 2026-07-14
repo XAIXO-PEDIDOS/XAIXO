@@ -42,53 +42,22 @@ export interface ResumenSemanal {
   totalPedidos: number;
   porCamion: ResumenCamion[];
   trailerFabrica: number;
+  trailerFabricaToneladas: number;
   pendientesSinEntregar: number;
-  kgTotal: number;
+  toneladasTotal: number;
   topClientes: ResumenCliente[];
   materialesTop: ResumenMaterial[];
 }
 
-// Peso en kg que representa una unidad de cada material conocido.
-// Unidades no listadas aquí (m2, m3, ud, rollo…) no se pueden convertir
-// a peso, así que no cuentan para los totales en kg/toneladas.
-const KG_POR_UNIDAD: Record<string, number> = {
-  // Toneladas directas
-  t: 1000,
-  tn: 1000,
-  ton: 1000,
-  tons: 1000,
-  tonelada: 1000,
-  toneladas: 1000,
-  // Sacos
-  saco: 25,
-  sacos: 25,
-  // Big bags
-  "big bag": 750,
-  "big bags": 750,
-  bigbag: 750,
-  bigbags: 750,
-  "big-bag": 750,
-  "big-bags": 750,
-  big: 750,
-  bigs: 750,
-  // Kilos
-  kg: 1,
-  kilo: 1,
-  kilos: 1,
-};
+// Cada camión sale siempre a plena carga, así que un pedido (viaje) cuenta
+// como la capacidad fija de su camión — no como la suma de lo que lleva.
+// Convertir unidades de material (sacos, palets, big bags...) a peso no era
+// fiable, así que ya no se usa para calcular toneladas.
+const CAPACIDAD_TRAILER_FABRICA_TONELADAS = 24;
 
-function kgPorUnidad(unidad: string | null | undefined): number | null {
-  if (!unidad) return null;
-  const normalizada = unidad.trim().toLowerCase();
-  return KG_POR_UNIDAD[normalizada] ?? null;
-}
-
-function toneladasDePedido(pedido: Pedido): number {
-  return (pedido.materiales ?? []).reduce((acc, m) => {
-    const kg = kgPorUnidad(m.unidad);
-    if (m.cantidad == null || kg == null) return acc;
-    return acc + (m.cantidad * kg) / 1000;
-  }, 0);
+function toneladasFijasDePedido(pedido: Pedido): number {
+  if (pedido.tipo === "trailer_fabrica") return CAPACIDAD_TRAILER_FABRICA_TONELADAS;
+  return pedido.camiones?.capacidad_toneladas ?? 0;
 }
 
 /** Calcula el resumen operativo de los pedidos cuya fecha_entrega cae en `dias`. */
@@ -102,8 +71,9 @@ export function calcularResumenSemanal(pedidos: Pedido[], dias: Date[]): Resumen
   const clientesMap = new Map<string, number>();
   const materialesMap = new Map<string, { original: string; veces: number }>();
   let trailerFabrica = 0;
+  let trailerFabricaToneladas = 0;
   let pendientesSinEntregar = 0;
-  let kgTotal = 0;
+  let toneladasTotal = 0;
 
   for (const p of pedidosSemana) {
     if (p.estado !== "entregado") pendientesSinEntregar += 1;
@@ -121,22 +91,21 @@ export function calcularResumenSemanal(pedidos: Pedido[], dias: Date[]): Resumen
         actual.veces += 1;
         materialesMap.set(clave, actual);
       }
-
-      const kg = kgPorUnidad(m.unidad);
-      if (m.cantidad != null && kg != null) {
-        kgTotal += m.cantidad * kg;
-      }
     }
+
+    const toneladas = toneladasFijasDePedido(p);
+    toneladasTotal += toneladas;
 
     if (p.tipo === "trailer_fabrica") {
       trailerFabrica += 1;
+      trailerFabricaToneladas += toneladas;
       continue;
     }
 
     const nombreCamion = p.camiones?.nombre ?? "Sin asignar";
     const actualCamion = porCamionMap.get(nombreCamion) ?? { nombre: nombreCamion, pedidos: 0, toneladas: 0 };
     actualCamion.pedidos += 1;
-    actualCamion.toneladas += toneladasDePedido(p);
+    actualCamion.toneladas += toneladas;
     porCamionMap.set(nombreCamion, actualCamion);
   }
 
@@ -154,8 +123,9 @@ export function calcularResumenSemanal(pedidos: Pedido[], dias: Date[]): Resumen
     totalPedidos: pedidosSemana.length,
     porCamion: Array.from(porCamionMap.values()).sort((a, b) => b.pedidos - a.pedidos),
     trailerFabrica,
+    trailerFabricaToneladas,
     pendientesSinEntregar,
-    kgTotal,
+    toneladasTotal,
     topClientes,
     materialesTop,
   };
@@ -213,7 +183,9 @@ export function formatearResumenSemanal(
   }
 
   if (resumen.trailerFabrica > 0) {
-    lineas.push(`${SIMBOLOS.triangulo} Tráilers fábrica: ${resumen.trailerFabrica}`);
+    lineas.push(
+      `${SIMBOLOS.triangulo} Tráilers fábrica: ${resumen.trailerFabrica} (${formatToneladas(resumen.trailerFabricaToneladas)}t)`
+    );
   }
 
   lineas.push(
@@ -222,9 +194,12 @@ export function formatearResumenSemanal(
       : `${SIMBOLOS.check} Todo entregado`
   );
 
-  if (resumen.kgTotal > 0) {
+  if (resumen.toneladasTotal > 0) {
     lineas.push("");
-    lineas.push(`*Material suministrado:* ${formatKg(resumen.kgTotal)} kg`);
+    // Ya no es material pesado línea a línea: es la suma de la capacidad
+    // fija de cada viaje (ver toneladasFijasDePedido), convertida a kg solo
+    // para mantener el mismo formato de línea que ya conocía el equipo.
+    lineas.push(`*Material suministrado:* ${formatKg(resumen.toneladasTotal * 1000)} kg`);
   }
 
   if (resumen.topClientes.length > 0) {
