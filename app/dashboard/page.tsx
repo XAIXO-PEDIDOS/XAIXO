@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "@/components/auth/LogoutButton";
@@ -143,6 +144,12 @@ export default async function DashboardPage() {
             <span className="hidden text-sm text-gray-400 md:inline">{user.email}</span>
             <MensajesWhatsappModal mensajes={(mensajesWhatsapp ?? []) as MensajeWhatsapp[]} />
             <ImportarClientesModal />
+            <Link
+              href="/estadisticas"
+              className="min-h-11 md:min-h-0 inline-flex items-center justify-center rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+            >
+              📊 Estadísticas
+            </Link>
             <BackupButton />
             <LogoutButton />
           </div>

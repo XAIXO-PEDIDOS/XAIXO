@@ -55,7 +55,7 @@ export interface ResumenSemanal {
 // fiable, así que ya no se usa para calcular toneladas.
 const CAPACIDAD_TRAILER_FABRICA_TONELADAS = 24;
 
-function toneladasFijasDePedido(pedido: Pedido): number {
+export function toneladasFijasDePedido(pedido: Pedido): number {
   if (pedido.tipo === "trailer_fabrica") return CAPACIDAD_TRAILER_FABRICA_TONELADAS;
   return pedido.camiones?.capacidad_toneladas ?? 0;
 }
