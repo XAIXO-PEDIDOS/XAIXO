@@ -47,6 +47,8 @@ function coloresPedido(pedido: Pedido) {
     return { bg: "bg-blue-50", border: "border-blue-300", texto: "text-blue-700" };
   if (nombre.includes("david"))
     return { bg: "bg-green-50", border: "border-green-300", texto: "text-green-700" };
+  if (nombre.includes("transporte cliente"))
+    return { bg: "bg-purple-50", border: "border-purple-300", texto: "text-purple-700" };
   return { bg: "bg-gray-50", border: "border-gray-300", texto: "text-gray-600" };
 }
 

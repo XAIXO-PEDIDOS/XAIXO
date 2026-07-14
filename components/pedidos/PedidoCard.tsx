@@ -22,6 +22,9 @@ function cardColors(pedido: Pedido) {
   if (nombre.includes("david")) {
     return { bg: "bg-green-50", border: "border-green-300", text: "text-green-700" };
   }
+  if (nombre.includes("transporte cliente")) {
+    return { bg: "bg-purple-50", border: "border-purple-300", text: "text-purple-700" };
+  }
   return { bg: "bg-gray-50", border: "border-gray-300", text: "text-gray-700" };
 }
 

@@ -309,7 +309,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, materialesSuge
             <option value="">Sin asignar</option>
             {camiones.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.nombre} ({c.capacidad_toneladas}t)
+                {c.capacidad_toneladas ? `${c.nombre} (${c.capacidad_toneladas}t)` : c.nombre}
               </option>
             ))}
           </select>
