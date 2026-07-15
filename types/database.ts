@@ -52,6 +52,7 @@ export interface Pedido {
   estado: EstadoPedido;
   notas: string | null;
   creado_por: string | null;
+  orden: number | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

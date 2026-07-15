@@ -144,6 +144,29 @@ export async function actualizarFechaEntrega(
   return { error: null, success: true };
 }
 
+export async function actualizarOrdenPedidos(
+  actualizaciones: { id: string; orden: number }[]
+): Promise<ActionState> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado" };
+
+  const resultados = await Promise.all(
+    actualizaciones.map(({ id, orden }) =>
+      supabase.from("pedidos").update({ orden }).eq("id", id)
+    )
+  );
+
+  const conError = resultados.find((r) => r.error);
+  if (conError?.error) {
+    console.error("[actualizarOrdenPedidos]", conError.error);
+    return { error: conError.error.message };
+  }
+
+  revalidatePath("/dashboard");
+  return { error: null, success: true };
+}
+
 export async function marcarEntregado(pedidoId: string): Promise<ActionState> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();

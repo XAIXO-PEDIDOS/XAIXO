@@ -8,15 +8,20 @@ import {
   DragStartEvent,
   PointerSensor,
   TouchSensor,
-  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
   pointerWithin,
 } from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Pedido, EstadoPedido } from "@/types/database";
-import { actualizarFechaEntrega } from "@/app/dashboard/actions";
+import { actualizarFechaEntrega, actualizarOrdenPedidos } from "@/app/dashboard/actions";
 import BotonEntregar from "@/components/pedidos/BotonEntregar";
 import BotonRevertirEntregado from "@/components/pedidos/BotonRevertirEntregado";
 import BotonEliminar from "@/components/pedidos/BotonEliminar";
@@ -176,11 +181,12 @@ function TarjetaArrastrable({
   const bloqueado =
     pedido.estado === "entregado" || pedido.estado === "cancelado";
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: pedido.id, disabled: bloqueado });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: pedido.id, disabled: bloqueado });
 
   const style = {
-    transform: CSS.Translate.toString(transform),
+    transform: CSS.Transform.toString(transform),
+    transition,
     opacity: isDragging ? 0 : 1,
     touchAction: "none",
   };
@@ -193,7 +199,7 @@ function TarjetaArrastrable({
       {...attributes}
       onClick={() => onEdit(pedido)}
       className={bloqueado ? "cursor-default" : "cursor-grab active:cursor-grabbing"}
-      title={bloqueado ? "Pedido bloqueado" : "Arrastrar para cambiar de día · Clic para editar"}
+      title={bloqueado ? "Pedido bloqueado" : "Arrastrar para reordenar o cambiar de día · Clic para editar"}
     >
       <ContenidoTarjeta pedido={pedido} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} onVer={onVer} />
     </div>
@@ -255,9 +261,11 @@ function ColumnaDroppable({
           }
         `}
       >
-        {pedidos.map((p) => (
-          <TarjetaArrastrable key={p.id} pedido={p} onEdit={onEdit} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} onVer={onVer} />
-        ))}
+        <SortableContext items={pedidos.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+          {pedidos.map((p) => (
+            <TarjetaArrastrable key={p.id} pedido={p} onEdit={onEdit} onEntregar={onEntregar} onRevertir={onRevertir} onEliminar={onEliminar} onVer={onVer} />
+          ))}
+        </SortableContext>
         {pedidos.length === 0 && (
           <div className="flex flex-col items-center pt-10 text-gray-200">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
@@ -348,19 +356,7 @@ export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit, onV
     setArrastrandoPedido(p ?? null);
   }
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    setArrastrandoPedido(null);
-
-    if (!over) return;
-
-    const pedidoId = active.id as string;
-    const nuevaFecha = over.id as string;
-
-    const pedido = pedidos.find((p) => p.id === pedidoId);
-    if (!pedido || pedido.fecha_entrega === nuevaFecha) return;
-    if (pedido.estado === "entregado" || pedido.estado === "cancelado") return;
-
+  function moverADia(pedidoId: string, nuevaFecha: string) {
     // Actualización optimista
     const pedidosAnteriores = pedidos;
     setPedidos((prev) =>
@@ -374,6 +370,71 @@ export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit, onV
         setPedidos(pedidosAnteriores);
       }
     });
+  }
+
+  function reordenarDentroDelDia(fecha: string, activeId: string, overId: string | null) {
+    const listaDia = pedidos.filter((p) => p.fecha_entrega === fecha);
+    const oldIndex = listaDia.findIndex((p) => p.id === activeId);
+    const newIndex = overId ? listaDia.findIndex((p) => p.id === overId) : listaDia.length - 1;
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+    const nuevaListaDia = arrayMove(listaDia, oldIndex, newIndex);
+
+    // Reindexa 0, 1, 2... según la nueva posición visual. Los pedidos
+    // bloqueados (entregado/cancelado) siguen sin poder arrastrarse, pero sí
+    // se les reasigna "orden" para no romper el orden global del día: la
+    // migración xaixo-pedidos-migration-orden-permitir-bloqueados.sql permite
+    // ese cambio puntual en el trigger de la BD.
+    const actualizaciones: { id: string; orden: number }[] = [];
+    const nuevaListaDiaConOrden = nuevaListaDia.map((p, idx) => {
+      if (p.orden !== idx) actualizaciones.push({ id: p.id, orden: idx });
+      return { ...p, orden: idx };
+    });
+
+    if (actualizaciones.length === 0) return;
+
+    // Actualización optimista
+    const pedidosAnteriores = pedidos;
+    const otros = pedidos.filter((p) => p.fecha_entrega !== fecha);
+    setPedidos([...otros, ...nuevaListaDiaConOrden]);
+
+    // Persistir en Supabase
+    actualizarOrdenPedidos(actualizaciones).then((result) => {
+      if (result.error) {
+        // Revertir si falla
+        setPedidos(pedidosAnteriores);
+      }
+    });
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setArrastrandoPedido(null);
+
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    if (activeId === overId) return;
+
+    const pedidoActivo = pedidos.find((p) => p.id === activeId);
+    if (!pedidoActivo) return;
+    if (pedidoActivo.estado === "entregado" || pedidoActivo.estado === "cancelado") return;
+
+    const diasStr = dias.map(toDateStr);
+    const overEsColumna = diasStr.includes(overId);
+    const pedidoSobre = overEsColumna ? null : pedidos.find((p) => p.id === overId);
+    const fechaDestino = overEsColumna ? overId : pedidoSobre?.fecha_entrega;
+
+    if (!fechaDestino) return;
+
+    if (fechaDestino === pedidoActivo.fecha_entrega) {
+      // Mismo día: reordenar verticalmente
+      reordenarDentroDelDia(fechaDestino, activeId, overEsColumna ? null : overId);
+    } else {
+      // Día distinto: cambiar fecha_entrega (comportamiento existente)
+      moverADia(activeId, fechaDestino);
+    }
   }
 
   return (
@@ -445,7 +506,7 @@ export default function CalendarioSemanal({ pedidos: initialPedidos, onEdit, onV
       </DndContext>
 
       <p className="mt-3 text-xs text-gray-400 text-center">
-        Arrastra las tarjetas entre columnas para cambiar la fecha de entrega · Clic para editar
+        Arrastra las tarjetas para reordenarlas o cambiar la fecha de entrega · Clic para editar
       </p>
     </div>
   );

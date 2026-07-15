@@ -86,7 +86,9 @@ export default async function DashboardPage() {
       .from("pedidos")
       .select("*, camiones(*)")
       .is("deleted_at", null)
-      .order("fecha_entrega", { ascending: true }),
+      .order("fecha_entrega", { ascending: true })
+      .order("orden", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true }),
     supabase
       .from("pedidos")
       .select("*, camiones(*)")
