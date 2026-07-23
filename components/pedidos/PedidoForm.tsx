@@ -60,7 +60,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, materialesSuge
 
   // Materiales helpers
   function addMaterial() {
-    if (materiales.length < 10) setMateriales([...materiales, { ...MATERIAL_VACIO }]);
+    if (materiales.length < 20) setMateriales([...materiales, { ...MATERIAL_VACIO }]);
   }
 
   function removeMaterial(i: number) {
@@ -246,7 +246,7 @@ export default function PedidoForm({ camiones, clientesSugeridos, materialesSuge
             </div>
           ))}
         </div>
-        {!bloqueado && materiales.length < 10 && (
+        {!bloqueado && materiales.length < 20 && (
           <button
             type="button"
             onClick={addMaterial}
